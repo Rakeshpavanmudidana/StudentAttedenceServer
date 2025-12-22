@@ -45,9 +45,14 @@ async function loginAndGetFrame(student_id, password) {
         });
     const page = await browser.newPage();
     try{
-    await page.goto("https://webprosindia.com/vignanit/default.aspx", {
-        waitUntil: "networkidle2",
-    });
+    await page.goto(
+  "https://webprosindia.com/vignanit/default.aspx",
+  {
+    waitUntil: "domcontentloaded", // NOT networkidle2
+    timeout: 60000
+  }
+);
+
 
     const html = await page.content();
     const $ = cheerio.load(html);
