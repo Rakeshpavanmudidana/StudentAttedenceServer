@@ -59,7 +59,17 @@ async function getBrowser() {
 
 
 async function loginAndGetFrame(student_id, password) {
-    const browser = await getBrowser();
+    const browser = await puppeteer.launch({
+        headless: "new",
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+        args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
+            "--no-zygote"
+        ]
+        });
     const page = await browser.newPage();
     try{
     await page.goto("https://webprosindia.com/vignanit/default.aspx", {
@@ -258,13 +268,19 @@ app.post("/get_today_attedence", async (req, res) => {
 
   return result;
 });
-
-const formattedText = todayAttendance
+let formattedText
+if ( todayAttendance.error){
+  formattedText = "There is no Attedence Today"
+}
+else{
+  formattedText = todayAttendance
   .filter(item => item.subject !== "Subject") // remove header row
   .map(item => {
     return `${item.subject.padEnd(12)} : ${item.status}`;
   })
   .join("\n");
+}
+
 
 
   console.log(formattedText);
@@ -348,7 +364,7 @@ app.post("/get_attedence", async (req, res) => {
         textmsg = "You have to attend " + days + "(" + periodsToDays(days) + ")";
     } 
 
-    const Responce = classPresent + "/" + classHeld + ": " + percent + "/n/n/n/t" + textmsg;
+    const Responce = classPresent + "/" + classHeld + ": " + percent + "% \n\n\n\t" + textmsg;
 
     res.json({ success: true, Responce });
 
