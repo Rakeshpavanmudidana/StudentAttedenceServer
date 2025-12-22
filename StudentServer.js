@@ -337,7 +337,7 @@ app.post("/get_attedence", async (req, res) => {
 
     let textmsg;
 
-    if ( percent => 75){
+    if ( percent >= 75){
         const days = periodsCanBunk(classPresent, classHeld);
         textmsg = "You can Skip " + days + " Periods ( " + periodsToDays(days) + " days )";
     }
