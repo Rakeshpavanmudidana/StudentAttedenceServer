@@ -233,7 +233,7 @@ app.post("/get_today_attedence", async (req, res) => {
     if (cells.length <= todayIndex) continue;
 
     const subject = cells[1]?.innerText.trim();
-    const status = cells[todayIndex - 1]?.innerText.trim();
+    const status = cells[todayIndex ]?.innerText.trim();
 
 
     if (subject && status != "-") {
