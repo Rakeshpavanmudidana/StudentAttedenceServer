@@ -87,11 +87,19 @@ async function loginAndGetFrame(student_id, password) {
         { waitUntil: "networkidle2" }
     );
 }
-    catch{
-        console.error(err);
-    res.status(500).json({ error: err.message });
+    catch (err) {
+  console.error("loginAndGetFrame error:", err.message);
 
-    }
+  // Always clean up Puppeteer
+  try {
+    await page.close();
+    await browser.close();
+  } catch (_) {}
+
+  // IMPORTANT: rethrow the error
+  throw err;
+}
+
     
 
     return { page };
@@ -269,6 +277,12 @@ res.json({ success: true, formattedText });
     console.error(err);
     res.status(500).json({ error: err.message });
   }
+
+  finally {
+    // 🔥 THIS IS THE CORRECT PLACE 🔥
+    if (page) await page.close().catch(() => {});
+    if (browser) await browser.close().catch(() => {});
+  }
 });
 
 
@@ -344,6 +358,11 @@ app.post("/get_attedence", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
+  }
+  finally {
+    // 🔥 THIS IS THE CORRECT PLACE 🔥
+    if (page) await page.close().catch(() => {});
+    if (browser) await browser.close().catch(() => {});
   }
 });
 
