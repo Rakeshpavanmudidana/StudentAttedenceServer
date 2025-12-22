@@ -24,9 +24,6 @@ function encryptPassword(plaintext, key, iv) {
 }
 
 
-let browser = null;
-
-
 // Browser is global
 
 
@@ -46,7 +43,8 @@ async function loginAndGetFrame(student_id, password) {
     const page = await browser.newPage();
     try{
     await page.goto("https://webprosindia.com/vignanit/default.aspx", {
-        waitUntil: "networkidle2",
+      waitUntil: "domcontentloaded",
+      timeout: 60000
     });
 
     const html = await page.content();
@@ -69,6 +67,10 @@ async function loginAndGetFrame(student_id, password) {
     const iv = "8701661282118308";
     const encryptedPassword = encryptPassword(password, key, iv);
 
+    await page.waitForSelector("#txtId2", { visible: true });
+    await page.waitForSelector("#txtPwd2", { visible: true });
+    await page.waitForSelector("#imgBtn2", { visible: true });
+
     await page.type("#txtId2", student_id);
     await page.type("#txtPwd2", password);
 
@@ -83,26 +85,20 @@ async function loginAndGetFrame(student_id, password) {
 
     // go to StudentMaster page
         await page.goto(
-        "https://webprosindia.com/vignanit/StudentMaster.aspx",
-        { waitUntil: "networkidle2" }
+      "https://webprosindia.com/vignanit/StudentMaster.aspx",
+      { waitUntil: "domcontentloaded" }
     );
+    return { browser, page };
 }
     catch (err) {
-  console.error("loginAndGetFrame error:", err.message);
-
-  // Always clean up Puppeteer
-  try {
-    await page.close();
-    await browser.close();
-  } catch (_) {}
-
-  // IMPORTANT: rethrow the error
-  throw err;
+  await page.close().catch(() => {});
+    await browser.close().catch(() => {});
+    throw err;
 }
 
     
 
-    return { page };
+    
 
 }
 
@@ -140,6 +136,7 @@ function periodsCanBunk(present, total) {
 
 // http://localhost:3000/get_today_attedence?student_id=24l35a4306&password=02092005
 app.post("/get_today_attedence", async (req, res) => {
+  let browser, page; 
   try {
     const { student_id, password} = req.body;
 
@@ -151,7 +148,7 @@ app.post("/get_today_attedence", async (req, res) => {
       });
     }
 
-    const { page } = await loginAndGetFrame(student_id, password);
+    ({ browser, page } = await loginAndGetFrame(student_id, password));
 
     await page.waitForSelector("#tblscreens", { timeout: 30000 });
 
