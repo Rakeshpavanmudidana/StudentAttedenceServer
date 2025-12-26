@@ -117,7 +117,14 @@ function periodsToReach75(present, total) {
 
 
 function periodsToDays( periods, periodsPerDay = 7) {
-  return Math.ceil(periods / periodsPerDay);
+  const result = {
+  days: Math.floor(periods / periodsPerDay),
+  remaining: periods % periodsPerDay
+
+  
+};
+return result;
+
 }
 
 
@@ -137,7 +144,7 @@ function periodsCanBunk(present, total) {
 // http://localhost:3000/get_today_attedence?student_id=24l35a4306&password=02092005
 app.post("/get_today_attedence", async (req, res) => {
   let browser, page; 
-  try {
+  
     const { student_id, password} = req.body;
 
 
@@ -147,7 +154,7 @@ app.post("/get_today_attedence", async (req, res) => {
         error: "student_id and password are required"
       });
     }
-
+    try {
     ({ browser, page } = await loginAndGetFrame(student_id, password));
 
     await page.waitForSelector("#tblscreens", { timeout: 30000 });
@@ -286,7 +293,7 @@ res.json({ success: true, formattedText });
 
 // http://localhost:3000/get_attedence?student_id=24l35a4306&password=02092005
 app.post("/get_attedence", async (req, res) => {
-  try {
+ 
     const { student_id, password} = req.body;
 
 
@@ -298,7 +305,7 @@ app.post("/get_attedence", async (req, res) => {
     }
 
     const { page } = await loginAndGetFrame(student_id, password);
-
+     try {
     // ✅ Wait for iframe properly
     const frameHandle = await page.waitForSelector(
       "iframe#capIframeId",
@@ -331,21 +338,23 @@ app.post("/get_attedence", async (req, res) => {
 
     console.log(attedence);
 
-    const classPresent = parseInt(attedence.classPresent);
-    const classHeld = parseInt(attedence.classHeld);
-    const percent = parseInt(attedence.percent);
+    const classPresent = Number(attedence.classPresent);
+    const classHeld = Number(attedence.classHeld);
+    const percent = Number(attedence.percent);
 
     let textmsg;
 
     if ( percent >= 75){
-        const days = periodsCanBunk(classPresent, classHeld);
-        textmsg = "You can Skip " + days + " Periods ( " + periodsToDays(days) + " days )";
+        const periods = periodsCanBunk(classPresent, classHeld);
+        const {days, remaining} = periodsToDays(periods);
+        textmsg = "You can Skip " + periods + " Periods ( " + days + " days " + remaining + " periods " +")";
     }
         
     else
     {
-        const days = periodsToReach75(classPresent, classHeld);
-        textmsg = "You have to attend " + days + "(" + periodsToDays(days) + ")";
+        const periods = periodsToReach75(classPresent, classHeld);
+        const {days, remaining} = periodsToDays(periods);
+        textmsg = "You have to attend " + periods + "(" + days + " days " + remaining + " periods " +")";")";
     } 
 
     const Responce = classPresent + "/" + classHeld + ": " + percent + "% \n\n\n\t" + textmsg;
@@ -359,7 +368,7 @@ app.post("/get_attedence", async (req, res) => {
   finally {
     // 🔥 THIS IS THE CORRECT PLACE 🔥
     if (page) await page.close().catch(() => {});
-    if (browser) await browser.close().catch(() => {});
+    // if (browser) await browser.close().catch(() => {});
   }
 });
 
